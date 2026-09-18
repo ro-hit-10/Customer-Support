@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SupportIQ — AI Ticket Intelligence Platform</title>
+<meta name="description" content="Agentic AI support ticket intelligence platform — autonomous LLM tool selection, SLA monitoring, and anomaly detection." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --bg:           #07090f;
+  --bg2:          #0d1117;
+  --surface:      #111827;
+  --surface2:     #161d2b;
+  --glass:        rgba(17, 24, 39, 0.7);
+  --card:         #1a2235;
+  --card-border:  rgba(99, 102, 241, 0.15);
+  --card-border2: rgba(255,255,255,0.07);
+  --primary:      #6366f1;
+  --primary-dim:  rgba(99,102,241,0.18);
+  --primary-glow: rgba(99,102,241,0.35);
+  --accent:       #a855f7;
+  --accent-dim:   rgba(168,85,247,0.15);
+  --cyan:         #06b6d4;
+  --cyan-dim:     rgba(6,182,212,0.15);
+  --text:         #f1f5f9;
+  --text-muted:   #64748b;
+  --text-soft:    #94a3b8;
+  --danger:       #ef4444;
+  --warning:      #f59e0b;
+  --success:      #10b981;
+  --info:         #3b82f6;
+  --sidebar-w:    260px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ── Sidebar ─────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--card-border2);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+}
+
+.sidebar-logo {
+  padding: 22px 20px 16px;
+  border-bottom: 1px solid var(--card-border2);
+}
+
+.logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 16px var(--primary-glow);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.01em;
+}
+
+.logo-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Sidebar Status */
+.sidebar-status {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--card-border2);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.25);
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  color: #34d399;
+  font-weight: 600;
+  width: 100%;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16,185,129,0.6);
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.6); }
+  70%  { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.nav-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 8px;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+
+.nav-label:first-child { margin-top: 0; }
+
+.nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: left;
+  margin-bottom: 2px;
+  position: relative;
+}
+
+.nav-btn .nav-icon {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-btn:hover {
+  background: rgba(99,102,241,0.1);
+  color: var(--text);
+}
+
+.nav-btn.active {
+  background: var(--primary-dim);
+  color: #a5b4fc;
+  font-weight: 600;
+}
+
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-badge {
+  margin-left: auto;
+  font-size: 0.7rem;
+  background: var(--primary-dim);
+  color: #818cf8;
+  border-radius: 9999px;
+  padding: 1px 7px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.nav-badge.danger {
+  background: rgba(239,68,68,0.15);
+  color: #fca5a5;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--card-border2);
+}
+
+.model-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--card-border2);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+}
+
+.model-icon {
+  font-size: 1rem;
+}
+
+.model-name {
+  font-weight: 600;
+  color: var(--text-soft);
+  line-height: 1.2;
+}
+
+.model-provider {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+/* ── Main Content ─────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* Top Bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--card-border2);
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--card-border2);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.76rem;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+/* ── Panels ─────────────────────────── */
+.panel { display: none; flex: 1; min-height: 0; }
+.panel.active { display: flex; flex-direction: column; }
+
+/* Chat clips internally — its child .chat-messages handles scroll */
+#panel-chat { overflow: hidden; }
+
+/* Anomaly + About scroll at the panel level */
+#panel-anomalies,
+#panel-about {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Chat Panel ─────────────────────── */
+#panel-chat {
+  position: relative;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-behavior: smooth;
+}
+
+.chat-messages::-webkit-scrollbar { width: 8px; }
+.chat-messages::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 99px; }
+.chat-messages::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+.chat-messages::-webkit-scrollbar-thumb:hover { background: #475569; border-radius: 99px; }
+
+/* Message Row */
+.msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-row.user {
+  flex-direction: row-reverse;
+}
+
+.msg-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.msg-avatar.ai {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  box-shadow: 0 0 14px var(--primary-glow);
+}
+
+.msg-avatar.user {
+  background: var(--surface2);
+  border: 1px solid var(--card-border2);
+}
+
+.msg-body {
+  flex: 1;
+  max-width: 78%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.msg-row.user .msg-body {
+  align-items: flex-end;
+}
+
+.msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.msg-row.user .msg-meta {
+  justify-content: flex-end;
+}
+
+.msg-name {
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.msg-time {
+  color: var(--text-muted);
+}
+
+.msg-bubble {
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  word-break: break-word;
+  position: relative;
+}
+
+.msg-row.ai .msg-bubble {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 4px 14px 14px 14px;
+}
+
+.msg-row.user .msg-bubble {
+  background: linear-gradient(135deg, rgba(99,102,241,0.22), rgba(168,85,247,0.18));
+  border: 1px solid rgba(99,102,241,0.3);
+  border-radius: 14px 4px 14px 14px;
+  color: #e0e7ff;
+}
+
+/* Markdown inside bubble */
+.msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+  font-family: 'Outfit', sans-serif;
+  color: #f1f5f9;
+  margin: 14px 0 8px;
+}
+.msg-bubble h3 {
+  font-size: 1rem;
+  border-bottom: 1px solid var(--card-border2);
+  padding-bottom: 6px;
+}
+.msg-bubble h3:first-child { margin-top: 0; }
+.msg-bubble ul, .msg-bubble ol { margin-left: 18px; margin-bottom: 10px; }
+.msg-bubble li { margin-bottom: 5px; }
+.msg-bubble strong { color: #a5b4fc; }
+.msg-bubble em { color: #c4b5fd; font-style: italic; }
+.msg-bubble code {
+  background: rgba(99,102,241,0.15);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.82rem;
+  font-family: 'Fira Code', monospace;
+  color: #93c5fd;
+}
+.msg-bubble pre {
+  background: var(--bg);
+  border: 1px solid var(--card-border2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+.msg-bubble pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.83rem;
+}
+.msg-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.82rem;
+}
+.msg-bubble th, .msg-bubble td {
+  border: 1px solid var(--card-border2);
+  padding: 8px 12px;
+  text-align: left;
+}
+.msg-bubble th {
+  background: rgba(255,255,255,0.04);
+  color: #cbd5e1;
+  font-weight: 600;
+}
+.msg-bubble tr:hover { background: rgba(255,255,255,0.02); }
+.msg-bubble blockquote {
+  border-left: 3px solid var(--primary);
+  margin: 10px 0;
+  padding: 6px 14px;
+  background: var(--primary-dim);
+  border-radius: 0 6px 6px 0;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+}
+.msg-bubble p:not(:last-child) { margin-bottom: 10px; }
+
+/* Tool trace */
+.tool-trace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  background: var(--accent-dim);
+  border: 1px solid rgba(168,85,247,0.25);
+  color: #c084fc;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+/* Typing indicator */
+.typing-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  animation: slideUp 0.3s ease;
+}
+
+.typing-bubble {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 4px 14px 14px 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typingBounce 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Chat input area */
+.chat-input-area {
+  padding: 16px 28px 20px;
+  background: var(--bg2);
+  border-top: 1px solid var(--card-border2);
+  flex-shrink: 0;
+}
+
+.prompt-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface);
+  border: 1px solid var(--card-border2);
+  color: var(--text-muted);
+  padding: 5px 13px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.suggestion-chip:hover {
+  color: #818cf8;
+  border-color: rgba(99,102,241,0.4);
+  background: var(--primary-dim);
+  transform: translateY(-1px);
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.chat-textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--card-border2);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 12px 16px;
+  resize: none;
+  outline: none;
+  max-height: 140px;
+  min-height: 48px;
+  overflow-y: auto;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chat-textarea::placeholder { color: var(--text-muted); }
+
+.chat-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.send-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px var(--primary-glow);
+}
+
+.send-btn:active {
+  transform: translateY(0);
+}
+
+.send-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.input-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ── Anomaly Dashboard Panel ─────────── */
+#panel-anomalies {
+  /* overflow set on .panel level above */
+  padding: 14px 20px 24px;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+#panel-anomalies::-webkit-scrollbar { width: 8px; }
+#panel-anomalies::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 99px; }
+#panel-anomalies::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+#panel-anomalies::-webkit-scrollbar-thumb:hover { background: #475569; border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+
+/* ── Compact top bar: metrics + scan btn inline ─── */
+.anomaly-topbar {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.metrics-row {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0; width: 3px;
+}
+
+.metric-card.danger::before { background: var(--danger); }
+.metric-card.warning::before { background: var(--warning); }
+.metric-card.info::before { background: var(--info); }
+
+.metric-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.metric-text { min-width: 0; }
+
+.metric-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.metric-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.metric-card.danger .metric-value { color: #f87171; }
+.metric-card.warning .metric-value { color: #fbbf24; }
+.metric-card.info .metric-value { color: #60a5fa; }
+
+.metric-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scan button */
+.scan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px var(--primary-glow);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.scan-btn:hover {
+  opacity: 0.9;
+  box-shadow: 0 6px 24px var(--primary-glow);
+}
+
+.scan-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* AI Narrative Card — collapsible */
+.narrative-card {
+  background: var(--card);
+  border: 1px solid rgba(168,85,247,0.25);
+  border-radius: 12px;
+  overflow: hidden;
+  display: none;
+}
+
+.narrative-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--accent-dim);
+  border-bottom: 1px solid rgba(168,85,247,0.2);
+  cursor: pointer;
+  user-select: none;
+}
+
+.narrative-header:hover { background: rgba(168,85,247,0.2); }
+
+.narrative-header .nh-icon { font-size: 1rem; }
+
+.narrative-header-text {
+  font-weight: 700;
+  font-size: 0.83rem;
+  color: #c084fc;
+  font-family: 'Outfit', sans-serif;
+  flex: 1;
+}
+
+.narrative-toggle {
+  font-size: 0.75rem;
+  color: #a78bfa;
+  font-weight: 600;
+  transition: transform 0.2s;
+}
+
+.narrative-toggle.open { transform: rotate(180deg); }
+
+.narrative-body {
+  padding: 14px 16px;
+  font-size: 0.83rem;
+  line-height: 1.65;
+  max-height: 180px;
+  overflow-y: auto;
+  /* collapsed by default */
+  display: none;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+.narrative-body.expanded { display: block; }
+
+.narrative-body::-webkit-scrollbar { width: 6px; }
+.narrative-body::-webkit-scrollbar-thumb { background: #334155; border-radius: 99px; }
+
+.narrative-body strong { color: #a5b4fc; }
+.narrative-body h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  color: #f1f5f9;
+  margin: 14px 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--card-border2);
+}
+.narrative-body h3:first-child { margin-top: 0; }
+.narrative-body ul { margin-left: 18px; margin-bottom: 10px; }
+.narrative-body li { margin-bottom: 5px; }
+.narrative-body p:not(:last-child) { margin-bottom: 10px; }
+
+/* Data Tables */
+.data-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  overflow: hidden;
+  display: none;
+}
+
+.data-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(255,255,255,0.025);
+  border-bottom: 1px solid var(--card-border2);
+}
+
+.data-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.data-count {
+  font-size: 0.73rem;
+  background: var(--primary-dim);
+  color: #818cf8;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-weight: 700;
+}
+
+.table-wrapper {
+  /* Table has own vertical scroll so rows always visible */
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 220px;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 rgba(255,255,255,0.04);
+}
+
+.table-wrapper::-webkit-scrollbar { width: 7px; height: 6px; }
+.table-wrapper::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 0 0 12px 0; }
+.table-wrapper::-webkit-scrollbar-thumb { background: #475569; border-radius: 99px; }
+.table-wrapper::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+table.ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+table.ticket-table th {
+  padding: 7px 12px;
+  background: #1e2d45;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--card-border2);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+table.ticket-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-soft);
+  vertical-align: middle;
+  font-size: 0.78rem;
+}
+
+table.ticket-table tr:hover td {
+  background: rgba(99,102,241,0.04);
+}
+
+table.ticket-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-critical {
+  background: rgba(239,68,68,0.18);
+  color: #fca5a5;
+  border: 1px solid rgba(239,68,68,0.35);
+}
+
+.badge-high {
+  background: rgba(245,158,11,0.18);
+  color: #fde047;
+  border: 1px solid rgba(245,158,11,0.35);
+}
+
+.badge-medium {
+  background: rgba(59,130,246,0.18);
+  color: #93c5fd;
+  border: 1px solid rgba(59,130,246,0.35);
+}
+
+.badge-open {
+  background: rgba(16,185,129,0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16,185,129,0.3);
+}
+
+.badge-escalated {
+  background: rgba(168,85,247,0.18);
+  color: #d8b4fe;
+  border: 1px solid rgba(168,85,247,0.35);
+}
+
+.badge-resolved {
+  background: rgba(100,116,139,0.18);
+  color: #94a3b8;
+  border: 1px solid rgba(100,116,139,0.3);
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 30px;
+  text-align: center;
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  opacity: 0.3;
+}
+
+.empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.empty-desc {
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+/* Spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* Fade animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border2); border-radius: 99px; }
+
+/* About Panel */
+#panel-about {
+  /* overflow set on .panel level above */
+  padding: 28px 32px;
+  flex-direction: column;
+  gap: 24px;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+.about-hero {
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.08));
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 32px;
+  text-align: center;
+}
+
+.about-hero-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #818cf8, #c084fc, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.about-hero-sub {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.feature-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: transform 0.2s;
+}
+
+.feature-card:hover { transform: translateY(-2px); }
+
+.feature-card-icon {
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+}
+
+.feature-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.feature-card-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .topbar { padding: 12px 16px; }
+  .chat-messages { padding: 16px; }
+  .chat-input-area { padding: 12px 16px 16px; }
+  .metrics-row { grid-template-columns: 1fr; }
+  #panel-anomalies, #panel-about { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <a class="logo-mark" href="#">
+      <div class="logo-icon">🤖</div>
+      <div>
+        <div class="logo-text">SupportIQ</div>
+        <div class="logo-sub">AI Intelligence</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="sidebar-status">
+    <div class="status-pill">
+      <div class="pulse-dot"></div>
+      System Online · 500 Tickets
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Workspace</div>
+
+    <button class="nav-btn active" data-panel="chat" onclick="switchPanel('chat', this)">
+      <span class="nav-icon">💬</span>
+      <span>AI Chat</span>
+    </button>
+
+    <button class="nav-btn" data-panel="anomalies" onclick="switchPanel('anomalies', this)">
+      <span class="nav-icon">🚨</span>
+      <span>Anomaly Scanner</span>
+      <span class="nav-badge danger" id="sidebar-sla-count">15</span>
+    </button>
+
+    <div class="nav-label">Resources</div>
+
+    <button class="nav-btn" data-panel="about" onclick="switchPanel('about', this)">
+      <span class="nav-icon">📖</span>
+      <span>About System</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="model-chip">
+      <span class="model-icon">⚡</span>
+      <div>
+        <div class="model-name">Llama 3.3 70B</div>
+        <div class="model-provider">Powered by Groq · LangGraph</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">
+        💬 Natural Language Q&amp;A
+      </div>
+      <div class="topbar-subtitle" id="topbar-subtitle">
+        Ask anything about your support tickets — I'll pick the right tool automatically.
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <div class="meta-chip">🧠 Agentic RAG</div>
+      <div class="meta-chip">📊 SQL + IQR</div>
+    </div>
+  </div>
+
+  <!-- ══ CHAT PANEL ══ -->
+  <div class="panel active" id="panel-chat">
+
+    <div class="chat-messages" id="chat-log">
+      <!-- Welcome message -->
+      <div class="msg-row ai">
+        <div class="msg-avatar ai">🤖</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-name">AI Support Agent</span>
+            <span class="msg-time" id="welcome-time"></span>
+          </div>
+          <div class="msg-bubble">
+            <p>👋 Hello! I'm your <strong>AI Support Analyst</strong>, powered by an agentic LLM with access to multiple tools.</p>
+            <p>I can help you with:</p>
+            <ul>
+              <li>📊 <strong>Ticket statistics</strong> — counts, trends, SLA status</li>
+              <li>⭐ <strong>Agent performance</strong> — ratings, workload, efficiency</li>
+              <li>⚡ <strong>Anomaly detection</strong> — resolution outliers, escalations</li>
+              <li>🔍 <strong>Semantic search</strong> — find similar tickets by meaning</li>
+            </ul>
+            <p>Just ask in plain English — I'll figure out which tools to use!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+      <div class="prompt-suggestions">
+        <span class="suggestion-chip" onclick="sendSuggestion('How many critical tickets are still open?')">📊 Critical open tickets</span>
+        <span class="suggestion-chip" onclick="sendSuggestion('Which agent has the lowest average customer rating?')">⭐ Lowest-rated agent</span>
+        <span class="suggestion-chip" onclick="sendSuggestion('Are there any resolution time anomalies?')">⚡ Resolution outliers</span>
+        <span class="suggestion-chip" onclick="sendSuggestion('Find tickets similar to a login failure issue')">🔍 Similar tickets</span>
+        <span class="suggestion-chip" onclick="sendSuggestion('What is the average resolution time by category?')">📈 Avg resolution time</span>
+        <span class="suggestion-chip" onclick="sendSuggestion('Show me the top 5 escalated tickets')">🚨 Top escalations</span>
+      </div>
+      <div class="input-row">
+        <div class="input-wrapper">
+          <textarea
+            id="chat-input"
+            class="chat-textarea"
+            placeholder="Ask anything about your support tickets..."
+            rows="1"
+            autocomplete="off"
+          ></textarea>
+        </div>
+        <button class="send-btn" id="send-btn" onclick="handleSend()" title="Send (Enter)">
+          ➤
+        </button>
+      </div>
+      <div class="input-hint">Press <kbd style="background:var(--surface);border:1px solid var(--card-border2);border-radius:4px;padding:1px 6px;font-size:0.7rem;">Enter</kbd> to send · <kbd style="background:var(--surface);border:1px solid var(--card-border2);border-radius:4px;padding:1px 6px;font-size:0.7rem;">Shift+Enter</kbd> for new line</div>
+    </div>
+  </div>
+
+  <!-- ══ ANOMALY PANEL ══ -->
+  <div class="panel" id="panel-anomalies">
+
+    <!-- Top bar: Metrics + Scan button inline -->
+    <div class="anomaly-topbar">
+      <div class="metrics-row">
+        <div class="metric-card danger">
+          <div class="metric-icon">🚨</div>
+          <div class="metric-text">
+            <div class="metric-label">SLA Breaches</div>
+            <div class="metric-value" id="m-sla">15</div>
+            <div class="metric-sub">High/Critical · Open</div>
+          </div>
+        </div>
+        <div class="metric-card warning">
+          <div class="metric-icon">⏱️</div>
+          <div class="metric-text">
+            <div class="metric-label">Res. Outliers</div>
+            <div class="metric-value" id="m-outliers">—</div>
+            <div class="metric-sub">IQR anomalies</div>
+          </div>
+        </div>
+        <div class="metric-card info">
+          <div class="metric-icon">👤</div>
+          <div class="metric-text">
+            <div class="metric-label">Low-Rating Agents</div>
+            <div class="metric-value" id="m-agents">—</div>
+            <div class="metric-sub">Performance clusters</div>
+          </div>
+        </div>
+      </div>
+      <button class="scan-btn" id="btn-scan" onclick="runScan()">
+        <span>🔍</span>
+        <span id="scan-btn-text">Run AI Anomaly Scan</span>
+      </button>
+    </div>
+
+    <!-- AI Narrative (collapsible) -->
+    <div class="narrative-card" id="narrative-card">
+      <div class="narrative-header" onclick="toggleNarrative()">
+        <span class="nh-icon">🤖</span>
+        <span class="narrative-header-text">AI Agent Analysis Report</span>
+        <span class="narrative-toggle" id="narrative-toggle">▼ Show</span>
+      </div>
+      <div class="narrative-body" id="narrative-body"></div>
+    </div>
+
+    <!-- SLA Breach Table -->
+    <div class="data-card" id="sla-card">
+      <div class="data-card-header">
+        <div class="data-card-title">
+          🚨 SLA Breach Candidates
+          <span style="color:var(--text-muted);font-weight:400;font-size:0.73rem;">High/Critical · Open past threshold</span>
+        </div>
+        <span class="data-count" id="sla-count-badge">0</span>
+      </div>
+      <div class="table-wrapper">
+        <table class="ticket-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Category</th>
+              <th>Age (Days)</th>
+              <th>Age (Hrs)</th>
+              <th>Issue</th>
+            </tr>
+          </thead>
+          <tbody id="sla-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Outliers Table -->
+    <div class="data-card" id="outliers-card">
+      <div class="data-card-header">
+        <div class="data-card-title">
+          ⏱️ Resolution-Time Outliers
+          <span style="color:var(--text-muted);font-weight:400;font-size:0.73rem;">IQR statistical detection per category</span>
+        </div>
+        <span class="data-count" id="outliers-count-badge">0</span>
+      </div>
+      <div class="table-wrapper">
+        <table class="ticket-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Resolution (Hrs)</th>
+              <th>Category Median</th>
+              <th>Rating</th>
+              <th>Issue</th>
+            </tr>
+          </thead>
+          <tbody id="outliers-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ ABOUT PANEL ══ -->
+  <div class="panel" id="panel-about">
+    <div class="about-hero">
+      <div class="about-hero-title">SupportIQ — Agentic AI</div>
+      <p class="about-hero-sub">
+        An autonomous AI system for support ticket intelligence. The LLM agent selects the right tool chain for every question — SQL queries, semantic RAG search, or statistical anomaly detection.
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-card-icon">🧠</div>
+        <div class="feature-card-title">LangGraph Agent</div>
+        <div class="feature-card-desc">Multi-step LLM reasoning with LangGraph. The agent autonomously selects and chains tools based on your question.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">📊</div>
+        <div class="feature-card-title">SQL Analytics</div>
+        <div class="feature-card-desc">Natural language converted to SQLite queries over 500 support tickets. Get exact counts, averages, and rankings.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">🔍</div>
+        <div class="feature-card-title">Semantic Search (RAG)</div>
+        <div class="feature-card-desc">Sentence-Transformers embeddings with cosine similarity. Find tickets semantically similar to any description.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">🚨</div>
+        <div class="feature-card-title">Anomaly Engine</div>
+        <div class="feature-card-desc">IQR-based statistical outlier detection for resolution times. SLA breach flagging for High/Critical priority tickets.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">⚡</div>
+        <div class="feature-card-title">Groq LLM (Llama 3.3)</div>
+        <div class="feature-card-desc">Ultra-fast inference via Groq API. Free-tier compatible with response caching to preserve quota.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">🏗️</div>
+        <div class="feature-card-title">FastAPI Backend</div>
+        <div class="feature-card-desc">REST API with /query, /anomalies, and /health endpoints. Async handler with TTL response caching.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Helpers ──────────────────────────────────────
+function renderMarkdown(text) {
+  if (typeof marked !== 'undefined' && marked.parse) {
+    try { return marked.parse(String(text || '')); }
+    catch(e) {}
+  }
+  return String(text || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/^- (.*$)/gim, '<li>$1</li>')
+    .replace(/\n\n/g, '<br/><br/>');
+}
+
+function formatTime(d = new Date()) {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+document.getElementById('welcome-time').textContent = formatTime();
+
+// ── Panel switching ──────────────────────────────
+const panelMeta = {
+  chat:      { title: '💬 Natural Language Q&A', subtitle: 'Ask anything about your support tickets — I\'ll pick the right tool automatically.' },
+  anomalies: { title: '🚨 Anomaly & SLA Dashboard', subtitle: 'Statistical outlier detection · SLA breach analysis · AI narrative reports.' },
+  about:     { title: '📖 About SupportIQ', subtitle: 'Architecture overview and system capabilities.' },
+};
+
+function switchPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  const meta = panelMeta[name];
+  if (meta) {
+    document.getElementById('topbar-title').innerHTML = meta.title;
+    document.getElementById('topbar-subtitle').textContent = meta.subtitle;
+  }
+}
+
+// ── Chat Logic ───────────────────────────────────
+const chatLog = document.getElementById('chat-log');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+
+// Auto-resize textarea
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 140) + 'px';
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+});
+
+function handleSend() {
+  const q = chatInput.value.trim();
+  if (q) askQuestion(q);
+}
+
+function sendSuggestion(text) {
+  chatInput.value = text;
+  chatInput.dispatchEvent(new Event('input'));
+  chatInput.focus();
+}
+
+let isThinking = false;
+
+function addMessage(role, content, toolCalls, isError = false) {
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (role === 'user' ? 'user' : 'ai');
+
+  const icon = role === 'user' ? '👤' : (isError ? '⚠️' : '🤖');
+  const name = role === 'user' ? 'You' : (isError ? 'Agent Error' : 'AI Support Agent');
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar ' + (role === 'user' ? 'user' : 'ai');
+  avatar.textContent = icon;
+
+  const body = document.createElement('div');
+  body.className = 'msg-body';
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.innerHTML = `<span class="msg-name">${name}</span><span class="msg-time">${formatTime()}</span>`;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.innerHTML = renderMarkdown(content);
+
+  body.appendChild(meta);
+  body.appendChild(bubble);
+
+  if (toolCalls && toolCalls.length) {
+    const trace = document.createElement('div');
+    trace.className = 'tool-trace';
+    toolCalls.forEach((tc, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'tool-chip';
+      chip.innerHTML = `⚙️ ${tc.tool}`;
+      trace.appendChild(chip);
+      if (i < toolCalls.length - 1) {
+        const arrow = document.createElement('span');
+        arrow.style.cssText = 'color:var(--text-muted);font-size:0.7rem;';
+        arrow.textContent = '→';
+        trace.appendChild(arrow);
+      }
+    });
+    body.appendChild(trace);
+  }
+
+  row.appendChild(avatar);
+  row.appendChild(body);
+  chatLog.appendChild(row);
+  chatLog.scrollTop = chatLog.scrollHeight;
+  return row;
+}
+
+function addTypingIndicator() {
+  const row = document.createElement('div');
+  row.className = 'typing-row';
+  row.id = 'typing-indicator';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'msg-avatar ai';
+  avatar.textContent = '🤖';
+
+  const body = document.createElement('div');
+  body.className = 'msg-body';
+
+  const meta = document.createElement('div');
+  meta.className = 'msg-meta';
+  meta.innerHTML = `<span class="msg-name">AI Support Agent</span><span class="msg-time">analyzing…</span>`;
+
+  const bubble = document.createElement('div');
+  bubble.className = 'typing-bubble';
+  for (let i = 0; i < 3; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'typing-dot';
+    bubble.appendChild(dot);
+  }
+
+  body.appendChild(meta);
+  body.appendChild(bubble);
+  row.appendChild(avatar);
+  row.appendChild(body);
+  chatLog.appendChild(row);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function askQuestion(question) {
+  if (isThinking) return;
+  isThinking = true;
+
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  addMessage('user', question);
+  addTypingIndicator();
+
+  try {
+    const res = await fetch('/query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    });
+
+    const contentType = res.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const txt = await res.text();
+      throw new Error(`Server error ${res.status}: ${txt.slice(0, 200)}`);
+    }
+
+    removeTypingIndicator();
+
+    if (!res.ok) {
+      addMessage('ai', data.detail || 'An error occurred.', null, true);
+    } else {
+      addMessage('ai', data.answer, data.tool_calls);
+    }
+  } catch (err) {
+    removeTypingIndicator();
+    addMessage('ai', '**Network or server error:**\n\n' + (err.message || String(err)), null, true);
+  } finally {
+    isThinking = false;
+    sendBtn.disabled = false;
+    chatInput.focus();
+  }
+}
+
+// ── Anomaly Scanner ──────────────────────────────
+
+// Toggle the AI narrative open/closed
+function toggleNarrative() {
+  const body = document.getElementById('narrative-body');
+  const toggle = document.getElementById('narrative-toggle');
+  const isOpen = body.classList.contains('expanded');
+  if (isOpen) {
+    body.classList.remove('expanded');
+    toggle.textContent = '\u25bc Show';
+    toggle.classList.remove('open');
+  } else {
+    body.classList.add('expanded');
+    toggle.textContent = '\u25b2 Hide';
+    toggle.classList.add('open');
+  }
+}
+
+async function runScan() {
+  const btn = document.getElementById('btn-scan');
+  const btnText = document.getElementById('scan-btn-text');
+  const narrativeCard = document.getElementById('narrative-card');
+  const slaCard = document.getElementById('sla-card');
+  const outliersCard = document.getElementById('outliers-card');
+
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span> Analyzing with AI...';
+  narrativeCard.style.display = 'none';
+
+  try {
+    const res = await fetch('/anomalies', { method: 'POST' });
+    const contentType = res.headers.get('content-type') || '';
+    let data;
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const txt = await res.text();
+      throw new Error(`Server error ${res.status}: ${txt.slice(0, 200)}`);
+    }
+
+    if (!res.ok) {
+      alert('Scan failed: ' + (data.detail || 'Server error'));
+      return;
+    }
+
+    // Narrative — load it but keep collapsed (user can expand)
+    const narrativeBody = document.getElementById('narrative-body');
+    narrativeBody.innerHTML = renderMarkdown(data.summary);
+    narrativeBody.classList.remove('expanded');   // collapsed by default
+    const toggle = document.getElementById('narrative-toggle');
+    if (toggle) { toggle.textContent = '\u25bc Show'; toggle.classList.remove('open'); }
+    narrativeCard.style.display = 'block';
+
+    // Tables — always visible
+    renderTables(data.candidates);
+    slaCard.style.display = 'block';
+    outliersCard.style.display = 'block';
+
+  } catch (err) {
+    alert('Scan error: ' + (err.message || String(err)));
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = 'Run AI Anomaly Scan';
+  }
+}
+
+function priorityBadge(p) {
+  if (!p) return '-';
+  const cl = p.toLowerCase() === 'critical' ? 'badge-critical'
+           : p.toLowerCase() === 'high'     ? 'badge-high'
+           : p.toLowerCase() === 'medium'   ? 'badge-medium'
+           : 'badge-resolved';
+  return `<span class="badge ${cl}">${p}</span>`;
+}
+
+function statusBadge(s) {
+  if (!s) return '-';
+  const cl = s.toLowerCase() === 'open'      ? 'badge-open'
+           : s.toLowerCase() === 'escalated' ? 'badge-escalated'
+           : 'badge-resolved';
+  return `<span class="badge ${cl}">${s}</span>`;
+}
+
+function renderTables(candidates) {
+  if (!candidates) return;
+
+  // SLA
+  const slaTbody = document.getElementById('sla-tbody');
+  const slaRows = candidates.sla_breaches || [];
+  slaTbody.innerHTML = '';
+  slaRows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${r.ticket_id}</strong></td>
+      <td>${priorityBadge(r.priority)}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td>${r.category || '-'}</td>
+      <td>${r.age_days !== undefined ? r.age_days + 'd' : '-'}</td>
+      <td>${r.age_hours !== undefined ? r.age_hours + 'h' : '-'}</td>
+      <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${(r.issue_summary||'').replace(/"/g,'&quot;')}">${r.issue_summary || '-'}</td>
+    `;
+    slaTbody.appendChild(tr);
+  });
+  document.getElementById('sla-count-badge').textContent = slaRows.length;
+  document.getElementById('m-sla').textContent = slaRows.length;
+
+  // Outliers
+  const outTbody = document.getElementById('outliers-tbody');
+  const outRows = candidates.resolution_time_outliers || [];
+  outTbody.innerHTML = '';
+  outRows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${r.ticket_id}</strong></td>
+      <td>${r.category || '-'}</td>
+      <td>${priorityBadge(r.priority)}</td>
+      <td><strong>${r.resolution_time_hrs}h</strong></td>
+      <td>${r.category_median_hrs}h</td>
+      <td>${r.customer_rating ? '⭐ ' + r.customer_rating : '-'}</td>
+      <td style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${(r.issue_summary||'').replace(/"/g,'&quot;')}">${r.issue_summary || '-'}</td>
+    `;
+    outTbody.appendChild(tr);
+  });
+  document.getElementById('outliers-count-badge').textContent = outRows.length;
+  document.getElementById('m-outliers').textContent = outRows.length || '—';
+
+  // Agents
+  const agentCount = (candidates.low_rating_agents || []).length;
+  document.getElementById('m-agents').textContent = agentCount || '—';
+
+  // Update sidebar badge
+  document.getElementById('sidebar-sla-count').textContent = slaRows.length;
+}
+</script>
+</body>
+</html>
