@@ -34,31 +34,28 @@ Most "AI support dashboards" are a thin LLM wrapper around a fixed set of `if/el
 
 ## Architecture
 
-```
-                         ┌─────────────────────────┐
-   User (UI or REST) ───▶│   FastAPI  (app/api)     │
-                         │  /query  /anomalies      │
-                         │  /health   "/" (UI)      │
-                         └────────────┬─────────────┘
-                                      │
-                                      ▼
-                    ┌──────────────────────────────────┐
-                    │      LangGraph ReAct Agent        │
-                    │   (Groq-hosted LLM, free tier)    │
-                    │  reason → act → observe → reason  │
-                    └───────────┬─────────┬──────────────┘
-                                │ decides │ which tool(s)
-              ┌─────────────────┼─────────┼─────────────────┐
-              ▼                 ▼                            ▼
-      ┌───────────────┐ ┌──────────────────┐        ┌──────────────────┐
-      │  sql_query     │ │  scan_anomalies   │        │ semantic_search   │
-      │  (SQLite,      │ │  (pandas stats:   │        │ (local embeddings │
-      │  read-only)    │ │  IQR + SLA rules, │        │  cosine similarity│
-      │                │ │  LLM judges/      │        │  over issue text) │
-      │                │ │  explains flags)  │        │                   │
-      └───────┬────────┘ └─────────┬─────────┘        └─────────┬─────────┘
-              ▼                    ▼                            ▼
-        SQLite (tickets.db, built from CSV on first run)   embeddings.npz (cached)
+```mermaid
+flowchart TD
+    U["👤 User<br/>UI or REST client"] --> API["⚡ FastAPI<br/><code>/query</code> · <code>/anomalies</code> · <code>/health</code> · <code>/</code> (UI)"]
+    API --> AGENT["🧠 LangGraph ReAct Agent<br/>Groq-hosted LLM<br/>reason → act → observe → reason"]
+
+    AGENT -->|decides| SQL["🗄️ sql_query<br/>read-only SELECT"]
+    AGENT -->|decides| ANOM["📊 scan_anomalies<br/>IQR + SLA stats<br/>LLM judges & explains"]
+    AGENT -->|decides| RAG["🔍 semantic_search<br/>local embeddings<br/>cosine similarity"]
+
+    SQL --> SQLITE[("SQLite<br/>tickets.db")]
+    ANOM --> SQLITE
+    RAG --> EMB[("embeddings.npz<br/>cached")]
+
+    classDef entry fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px,color:#1e1b4b;
+    classDef brain fill:#fef3c7,stroke:#d97706,stroke-width:1.5px,color:#78350f;
+    classDef tool fill:#dcfce7,stroke:#16a34a,stroke-width:1.5px,color:#14532d;
+    classDef store fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px,color:#1e293b;
+
+    class U,API entry;
+    class AGENT brain;
+    class SQL,ANOM,RAG tool;
+    class SQLITE,EMB store;
 ```
 
 **The agent, not application code, decides tool selection.** [`app/agent/graph.py`](app/agent/graph.py) builds a LangGraph `create_react_agent` with a system prompt describing the three tools below; the LLM chooses, calls, observes results, and may call a second tool before answering — e.g. `semantic_search` to find matching tickets, then `sql_query` to compute a stat about them.
